@@ -1,0 +1,205 @@
+{
+  "$schema-template": "4.0.0",
+  "modulesContent": {
+    "$edgeAgent": {
+      "properties.desired": {
+        "schemaVersion": "1.1",
+        "runtime": {
+          "type": "docker",
+          "settings": {
+            "minDockerVersion": "v1.25",
+            "loggingOptions": "",
+            "registryCredentials": {
+              "iiotdemo": {
+                "username": "$ACR_USERNAME",
+                "password": "$ACR_PASSWORD",
+                "address": "$ACR_ADDRESS"
+              }
+            }
+          }
+        },
+        "systemModules": {
+          "edgeAgent": {
+            "type": "docker",
+            "settings": {
+              "image": "mcr.microsoft.com/azureiotedge-agent:1.2",
+              "createOptions": {}
+            }
+          },
+          "edgeHub": {
+            "type": "docker",
+            "status": "running",
+            "restartPolicy": "always",
+            "settings": {
+              "image": "mcr.microsoft.com/azureiotedge-hub:1.2",
+              "createOptions": {
+                "HostConfig": {
+                  "PortBindings": {
+                    "5671/tcp": [
+                      {
+                        "HostPort": "5671"
+                      }
+                    ],
+                    "8883/tcp": [
+                      {
+                        "HostPort": "8883"
+                      }
+                    ],
+                    "443/tcp": [
+                      {
+                        "HostPort": "443"
+                      }
+                    ]
+                  }
+                }
+              }
+            }
+          }
+        },
+        "modules": {
+          "opcsimulator": {
+            "type": "docker",
+            "status": "running",
+            "restartPolicy": "always",
+            "settings": {
+              "image": "${MODULES.opcsimulator}",
+              "createOptions": {
+                "HostConfig": {
+                  "PortBindings": {
+                    "1880/tcp": [
+                      {
+                        "HostPort": "1880"
+                      }
+                    ]
+                  }
+                }
+              }
+            }
+          },
+          "opcpublisher": {
+            "version": "1.0",
+            "type": "docker",
+            "status": "running",
+            "restartPolicy": "always",
+            "settings": {
+              "image": "${MODULES.opcpublisher}",
+              "createOptions": {
+                "Hostname": "opcpublisher",
+                "Cmd": [
+                  "--pf=/app/pn.json",
+                  "--aa"
+                ]
+              }
+            }
+          },
+          "sqledge": {
+            "type": "docker",
+            "status": "running",
+            "restartPolicy": "always",
+            "settings": {
+              "image": "${MODULES.sqledge}",
+              "createOptions": {
+                "HostConfig": {
+                  "CapAdd": [
+                    "SYS_PTRACE"
+                  ],
+                  "Binds": [
+                    "sqlvolume:/sqlvolume"
+                  ],
+                  "PortBindings": {
+                    "1433/tcp": [
+                      {
+                        "HostPort": "1433"
+                      }
+                    ]
+                  },
+                  "Mounts": [
+                    {
+                      "Type": "volume",
+                      "Source": "sqlvolume",
+                      "Target": "/var/opt/mssql"
+                    }
+                  ]
+                },
+                "User": "0:0",
+                "Env": [
+                  "MSSQL_AGENT_ENABLED=TRUE",
+                  "ClientTransportType=AMQP_TCP_Only",
+                  "MSSQL_PID=Premium",
+                  "ACCEPT_EULA=Y",
+                  "MSSQL_LCID=1033",
+                  "MSSQL_COLLATION=SQL_Latin1_General_CP1_CI_AS",
+                  "SA_PASSWORD=Password_54321"
+                ]
+              }
+            }
+          },
+          "grafana": {
+            "type": "docker",
+            "status": "running",
+            "restartPolicy": "always",
+            "settings": {
+              "image": "${MODULES.grafana}",
+              "createOptions": {
+                "Env": [
+                  "GF_SECURITY_ADMIN_PASSWORD=${GRAFANA_ADMIN_PASSWORD}"
+                ],
+                "Volumes": {
+                  "/etc/grafana/provisioning": {}
+                },
+                "HostConfig": {
+                  "PortBindings": {
+                    "3000/tcp": [
+                      {
+                        "HostPort": "3000"
+                      }
+                    ]
+                  }
+                }
+              }
+            }
+          },
+          "IoTEdgeMetricsCollector": {
+            "version": "1.0",
+            "type": "docker",
+            "status": "running",
+            "restartPolicy": "always",
+            "settings": {
+              "image": "mcr.microsoft.com/azureiotedge-metrics-collector:1.0",
+              "createOptions": {}
+            },
+            "env": {
+              "ResourceId": {
+                "value": "${METRICS_COLLECTOR_RESOURCE_ID}"
+              },
+              "UploadTarget": {
+                "value": "AzureMonitor"
+              },
+              "LogAnalyticsWorkspaceId": {
+                "value": "${METRICS_COLLECTOR_WORKSPACE_ID}"
+              },
+              "LogAnalyticsSharedKey": {
+                "value": "${METRICS_COLLECTOR_PRIMARY_KEY}"
+              },
+              "OtherConfig": {
+                "value": ""
+              }
+            }
+          }
+        }
+      }
+    },
+    "$edgeHub": {
+      "properties.desired": {
+        "schemaVersion": "1.1",
+        "routes": {
+          "cloud": "FROM /messages/modules/opcpublisher/* INTO $upstream",
+          "opc": "FROM /messages/modules/opcpublisher/* INTO BrokeredEndpoint(\"/modules/sqledge/inputs/OPCUAData\")"
+        },
+        "storeAndForwardConfiguration": {
+          "timeToLiveSecs": 7200
+        }
+      }
+    }
+  }
+}
