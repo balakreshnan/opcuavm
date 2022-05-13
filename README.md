@@ -4,7 +4,7 @@ This project is a simplification of the [IOT-Edge-For-IIOT](https://github.com/A
 
 ## Solution Overview
 
-![Industrial IoT Demo Architecture](/assets/architecture.png)
+![Industrial IoT Demo Architecture](/assets/iotedge1.jpg)
 - opcsimulator is a NodeRed container that has two flows representing two OPCServers exposing container ports 54845 and 54855.  It exposes port 1880 so you can log into the NodeRed environment and explore the flows.
 - opcpublisher is configured to read from opcsimulator and output data to edgeHub where it is routed to sqledge via the "opc" route and IoTHub via the "cloud" route.
 - sqledge is an Azure SQL Edge container that contains a data instance for storing telemetry and a stream analytics job that reads in the data from the opcpublisher via the "opc" route.    It exposes port 1433 so you can connect with tools such as SQL Server Management Studio or Azure Data Studio.
