@@ -27,6 +27,13 @@ CREATE TABLE [dbo].[DeviceData]
     CONSTRAINT [pk_devicedata] PRIMARY KEY ([DataPoint], [Asset], [time])
 )
 GO
+Create Table [dbo].[deviceaggr]
+(
+[NodeId] NVARCHAR(255) NULL,
+[Time] DATETIME2,
+[Count] FLOAT
+)
+GO
 Create Function [dbo].[GetRunningStatus](@assetStatus as DECIMAL(28, 5)) Returns smallint
 As
 Begin
@@ -177,12 +184,16 @@ GO
 Create External file format dashboardsInputFileFormat WITH (format_type = JSON)
 CREATE EXTERNAL DATA SOURCE dashboardsInput WITH (LOCATION = 'edgehub://')
 CREATE EXTERNAL STREAM dashboardsOPCUAInputStream WITH ( DATA_SOURCE = dashboardsInput, FILE_FORMAT = dashboardsInputFileFormat, LOCATION = N'OPCUAData', INPUT_OPTIONS = N'', OUTPUT_OPTIONS = N'')
-CREATE MASTER KEY ENCRYPTION BY PASSWORD = 'Password_54321';
-CREATE DATABASE SCOPED CREDENTIAL dashboardsSQLCredential WITH IDENTITY = 'sa', SECRET = 'Password_54321'
+CREATE EXTERNAL STREAM dashboardsOPCUAInputStreamasa WITH ( DATA_SOURCE = dashboardsInput, FILE_FORMAT = dashboardsInputFileFormat, LOCATION = N'asaData', INPUT_OPTIONS = N'', OUTPUT_OPTIONS = N'')
+CREATE MASTER KEY ENCRYPTION BY PASSWORD = 'Azure!2345678';
+CREATE DATABASE SCOPED CREDENTIAL dashboardsSQLCredential WITH IDENTITY = 'sa', SECRET = 'Azure!2345678'
 CREATE EXTERNAL DATA SOURCE telemetryDbServer WITH (LOCATION = 'sqlserver://tcp:.,1433',CREDENTIAL = dashboardsSQLCredential)
 CREATE EXTERNAL STREAM DeviceDataTable WITH (DATA_SOURCE = telemetryDbServer,LOCATION = N'telemetry.dbo.DeviceData',INPUT_OPTIONS = N'',OUTPUT_OPTIONS = N'')
+CREATE EXTERNAL STREAM DeviceAggrTable WITH (DATA_SOURCE = telemetryDbServer,LOCATION = N'telemetry.dbo.deviceaggr',INPUT_OPTIONS = N'',OUTPUT_OPTIONS = N'')
 
 EXEC sys.sp_create_streaming_job @name=N'dashboardsStreamFromHubIntoTable',
-@statement= N'Select ContentMask, NodeId, ServerTimestamp, SourceTimestamp, StatusCode, Status, ApplicationUri, Timestamp, Value.Type as [ValueType], Value.Body as Value, substring(NodeId,regexmatch(NodeId,''=(?:.(?!=))+$'')+1,len(NodeId)-regexmatch(NodeId,''=(?:.(?!=))+$'')) as DataPoint, substring(NodeId,1, regexmatch(NodeId,''\#(?:.(?!\#))+$'')-1) as Asset, SourceTimestamp as [time] into DeviceDataTable from dashboardsOPCUAInputStream'
+@statement= N'Select ContentMask, NodeId, ServerTimestamp, SourceTimestamp, StatusCode, Status, ApplicationUri, Timestamp, Value.Type as [ValueType], Value.Body as Value, substring(NodeId,regexmatch(NodeId,''=(?:.(?!=))+$'')+1,len(NodeId)-regexmatch(NodeId,''=(?:.(?!=))+$'')) as DataPoint, substring(NodeId,1, regexmatch(NodeId,''\#(?:.(?!\#))+$'')-1) as Asset, SourceTimestamp as [time] into DeviceDataTable from dashboardsOPCUAInputStream
+
+Select NodeId, [Time], Count into DeviceAggrTable from dashboardsOPCUAInputStreamasa'
 
 exec sys.sp_start_streaming_job @name=N'dashboardsStreamFromHubIntoTable'

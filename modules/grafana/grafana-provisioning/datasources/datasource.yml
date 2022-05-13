@@ -8,4 +8,4 @@ datasources:
     editable: true
     user: sa
     secureJsonData:
-      password: "Password_54321"
+      password: "Azure!2345678"

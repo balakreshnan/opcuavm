@@ -1,0 +1,119 @@
+{
+  "modulesContent": {
+    "$edgeAgent": {
+      "properties.desired": {
+        "schemaVersion": "1.1",
+        "runtime": {
+          "type": "docker",
+          "settings": {
+            "minDockerVersion": "v1.25",
+            "loggingOptions": "",
+            "registryCredentials": {
+              "iiotdemo": {
+                "username": "opcuacontainer",
+                "password": "bcLtRTdPLBcMoH1RBlrZ2wYFLj/WNjIu",
+                "address": "opcuacontainer.azurecr.io"
+              }
+            }
+          }
+        },
+        "systemModules": {
+          "edgeAgent": {
+            "type": "docker",
+            "settings": {
+              "image": "mcr.microsoft.com/azureiotedge-agent:1.2",
+              "createOptions": "{}"
+            }
+          },
+          "edgeHub": {
+            "type": "docker",
+            "status": "running",
+            "restartPolicy": "always",
+            "settings": {
+              "image": "mcr.microsoft.com/azureiotedge-hub:1.2",
+              "createOptions": "{\"HostConfig\":{\"PortBindings\":{\"5671/tcp\":[{\"HostPort\":\"5671\"}],\"8883/tcp\":[{\"HostPort\":\"8883\"}],\"443/tcp\":[{\"HostPort\":\"443\"}]}}}"
+            }
+          }
+        },
+        "modules": {
+          "opcsimulator": {
+            "type": "docker",
+            "status": "running",
+            "restartPolicy": "always",
+            "settings": {
+              "image": "opcuacontainer.azurecr.io/opcuacontainer/opcsimulator:0.0.1-amd64",
+              "createOptions": "{\"HostConfig\":{\"PortBindings\":{\"1880/tcp\":[{\"HostPort\":\"1880\"}]}}}"
+            }
+          },
+          "opcpublisher": {
+            "version": "1.0",
+            "type": "docker",
+            "status": "running",
+            "restartPolicy": "always",
+            "settings": {
+              "image": "opcuacontainer.azurecr.io/opcuacontainer/opcpublisher:0.0.1-amd64",
+              "createOptions": "{\"Hostname\":\"opcpublisher\",\"Cmd\":[\"--pf=/app/pn.json\",\"--aa\"]}"
+            }
+          },
+          "sqledge": {
+            "type": "docker",
+            "status": "running",
+            "restartPolicy": "always",
+            "settings": {
+              "image": "opcuacontainer.azurecr.io/opcuacontainer/sqledge:0.0.1-amd64",
+              "createOptions": "{\"HostConfig\":{\"CapAdd\":[\"SYS_PTRACE\"],\"Binds\":[\"sqlvolume:/sqlvolume\"],\"PortBindings\":{\"1433/tcp\":[{\"HostPort\":\"1433\"}]},\"Mounts\":[{\"Type\":\"volume\",\"Source\":\"sqlvolume\",\"Target\":\"/var/opt/mssql\"}]},\"Env\":[\"MSSQL_AGENT_ENABLED=TRUE\",\"ClientTransportType=AMQP_TCP_Only\",\"PlanId=asde-premium-on-iot-edge\",\"ACCEPT_EULA=Y\",\"MSSQL_LCID=1033\",\"MSSQL_COLLATION=SQL_Latin1_General_CP1_CI_AS\",\"MSSQL_SA_PASSWORD=Azure!2345678\"]}"
+            }
+          },
+          "grafana": {
+            "type": "docker",
+            "status": "running",
+            "restartPolicy": "always",
+            "settings": {
+              "image": "opcuacontainer.azurecr.io/opcuacontainer/grafana:0.0.1-amd64",
+              "createOptions": "{\"Env\":[\"GF_SECURITY_ADMIN_PASSWORD=admin\"],\"Volumes\":{\"/etc/grafana/provisioning\":{}},\"HostConfig\":{\"PortBindings\":{\"3000/tcp\":[{\"HostPort\":\"3000\"}]}}}"
+            }
+          },
+          "IoTEdgeMetricsCollector": {
+            "version": "1.0",
+            "type": "docker",
+            "status": "running",
+            "restartPolicy": "always",
+            "settings": {
+              "image": "mcr.microsoft.com/azureiotedge-metrics-collector:1.0",
+              "createOptions": "{}"
+            },
+            "env": {
+              "ResourceId": {
+                "value": "/subscriptions/c46a9435-c957-4e6c-a0f4-b9a597984773/resourceGroups/marmoniot/providers/Microsoft.Devices/IotHubs/iiottest"
+              },
+              "UploadTarget": {
+                "value": "AzureMonitor"
+              },
+              "LogAnalyticsWorkspaceId": {
+                "value": "646a6767-2545-44eb-8cbb-137cd6ea6025"
+              },
+              "LogAnalyticsSharedKey": {
+                "value": "AJroxmlkCxdCVFAeEhUUc+pwXfget2F0Er5UkXwirfR/hoGx8Zn5viSZZ6hai8QLKIPyAN98o8qVwNLnuDklVw=="
+              },
+              "OtherConfig": {
+                "value": ""
+              }
+            }
+          }
+        }
+      }
+    },
+    "$edgeHub": {
+      "properties.desired": {
+        "schemaVersion": "1.1",
+        "routes": {
+          "cloud": "FROM /messages/modules/opcpublisher/* INTO $upstream",
+          "opc": "FROM /messages/modules/opcpublisher/* INTO BrokeredEndpoint(\"/modules/sqledge/inputs/OPCUAData\")"
+        },
+        "storeAndForwardConfiguration": {
+          "timeToLiveSecs": 7200
+        }
+      }
+    }
+  }
+}

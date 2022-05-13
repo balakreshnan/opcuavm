@@ -27,12 +27,12 @@ exec('
         CREATE EXTERNAL STREAM dashboardsOPCUAInputStream WITH ( DATA_SOURCE = dashboardsInput, FILE_FORMAT = dashboardsInputFileFormat, LOCATION = N''OPCUAData'', INPUT_OPTIONS = N'''', OUTPUT_OPTIONS = N'''')
 
     if not exists(select 1 from sys.symmetric_keys)
-        CREATE MASTER KEY ENCRYPTION BY PASSWORD = ''Password_54321'';
+        CREATE MASTER KEY ENCRYPTION BY PASSWORD = ''Azure!2345678'';
 
     if not exists(select 1 from sys.database_scoped_credentials where name = ''dashboardsSQLCredential'')
-        CREATE DATABASE SCOPED CREDENTIAL dashboardsSQLCredential WITH IDENTITY = ''sa'', SECRET = ''Password_54321''
+        CREATE DATABASE SCOPED CREDENTIAL dashboardsSQLCredential WITH IDENTITY = ''sa'', SECRET = ''Azure!2345678''
     else
-        ALTER DATABASE SCOPED CREDENTIAL dashboardsSQLCredential WITH IDENTITY = ''sa'', SECRET = ''Password_54321''
+        ALTER DATABASE SCOPED CREDENTIAL dashboardsSQLCredential WITH IDENTITY = ''sa'', SECRET = ''Azure!2345678''
 
     if not exists(select 1 from sys.external_data_sources where name = ''telemetryDbServer'')
         CREATE EXTERNAL DATA SOURCE telemetryDbServer WITH (LOCATION = ''sqlserver://tcp:.,1433'',CREDENTIAL = dashboardsSQLCredential)

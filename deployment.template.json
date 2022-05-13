@@ -121,15 +121,14 @@
                     }
                   ]
                 },
-                "User": "0:0",
                 "Env": [
                   "MSSQL_AGENT_ENABLED=TRUE",
                   "ClientTransportType=AMQP_TCP_Only",
-                  "MSSQL_PID=Premium",
+                  "PlanId=asde-premium-on-iot-edge",
                   "ACCEPT_EULA=Y",
                   "MSSQL_LCID=1033",
                   "MSSQL_COLLATION=SQL_Latin1_General_CP1_CI_AS",
-                  "SA_PASSWORD=Password_54321"
+                  "MSSQL_SA_PASSWORD=Azure!2345678"
                 ]
               }
             }
