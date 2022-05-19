@@ -59,6 +59,8 @@ opc : FROM /messages/modules/opcpublisher/* INTO BrokeredEndpoint("/modules/Azur
 asatohub: FROM /messages/modules/saedge/* INTO $upstream
 
 asatosql: FROM /messages/modules/saedge/* INTO BrokeredEndpoint("/modules/AzureSQLEdge/inputs/asaData")
+
+sqloutput: FROM /messages/* INTO $upstream
 ```
 
 - Log into SQL Edge

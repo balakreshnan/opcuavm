@@ -76,3 +76,29 @@ devicetelemetry
 | limit 1000
 | order  by SourceTimestamp desc 
 ```
+
+```
+.create-or-alter function telemetryaggr(){
+opcuaincoming
+| project NodeId = tostring(data.NodeId), 
+AggrTime = todatetime(data.Time), Count=toint(data.Count)
+| where isnotempty(Count)
+}
+```
+
+```
+.set devicetelemetryaggr <|
+    telemetryaggr()
+    | limit 0
+```
+
+```
+//  Create an update policy to transfer landing to landingTransformed
+.alter table devicetelemetryaggr policy update
+@'[{"IsEnabled": true, "Source": "opcuaincoming", "Query": "telemetryaggr", "IsTransactional": true, "PropagateIngestionProperties": false}]'
+```
+
+```
+devicetelemetryaggr
+| limit 100
+```

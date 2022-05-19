@@ -193,7 +193,7 @@ CREATE DATABASE SCOPED CREDENTIAL dashboardsSQLCredential WITH IDENTITY =
 CREATE EXTERNAL DATA SOURCE telemetryDbServer WITH (LOCATION = 'sqlserver://tcp:.,1433',CREDENTIAL = dashboardsSQLCredential)
 CREATE EXTERNAL STREAM DeviceDataTable WITH (DATA_SOURCE = telemetryDbServer,LOCATION = N'telemetry.dbo.DeviceData',INPUT_OPTIONS = N'',OUTPUT_OPTIONS = N'')
 CREATE EXTERNAL STREAM DeviceAggrTable WITH (DATA_SOURCE = telemetryDbServer,LOCATION = N'telemetry.dbo.deviceaggr',INPUT_OPTIONS = N'',OUTPUT_OPTIONS = N'')
-CREATE EXTERNAL STREAM edgeHubOut WITH ( DATA_SOURCE = dashboardsOutput, FILE_FORMAT = dashboardsInputFileFormat, LOCATION = 'edgehub', OUTPUT_OPTIONS = 'REJECT_TYPE: Drop' );
+CREATE EXTERNAL STREAM edgeHubOut WITH ( DATA_SOURCE = dashboardsOutput, FILE_FORMAT = dashboardsInputFileFormat, LOCATION = 'sqledgeoutput', OUTPUT_OPTIONS = N'' );
 
 EXEC sys.sp_create_streaming_job @name=N'dashboardsStreamFromHubIntoTable',
 @statement= N'Select ContentMask, NodeId, ServerTimestamp, SourceTimestamp, StatusCode, Status, ApplicationUri, Timestamp, Value.Type as [ValueType], Value.Body as Value, substring(NodeId,regexmatch(NodeId,''=(?:.(?!=))+$'')+1,len(NodeId)-regexmatch(NodeId,''=(?:.(?!=))+$'')) as DataPoint, substring(NodeId,1, regexmatch(NodeId,''\#(?:.(?!\#))+$'')-1) as Asset, SourceTimestamp as [time] into DeviceDataTable from dashboardsOPCUAInputStream
