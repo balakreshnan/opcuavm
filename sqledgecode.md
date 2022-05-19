@@ -109,7 +109,7 @@ CREATE EXTERNAL STREAM dashboardsOPCUAInputStream2 WITH ( DATA_SOURCE = d
 CREATE EXTERNAL DATA SOURCE dashboardsOutput WITH (LOCATION = 'edgehub://')
 
 CREATE EXTERNAL STREAM DeviceAggrTable WITH (DATA_SOURCE = telemetryDbServer,LOCATION = N'telemetry.dbo.deviceaggr',INPUT_OPTIONS = N'',OUTPUT_OPTIONS = N'')
-CREATE EXTERNAL STREAM edgeHubOut WITH ( DATA_SOURCE = dashboardsOutput, FILE_FORMAT = dashboardsInputFileFormat, LOCATION = 'edgehub', OUTPUT_OPTIONS = 'REJECT_TYPE: Drop' );
+CREATE EXTERNAL STREAM edgeHubOut WITH ( DATA_SOURCE = dashboardsOutput, FILE_FORMAT = dashboardsInputFileFormat, LOCATION = 'sqledgeoutput', OUTPUT_OPTIONS = N'' );
 ```
 
 - Streaming configuration
